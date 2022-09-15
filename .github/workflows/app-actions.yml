@@ -1,0 +1,49 @@
+name: Servian GTD App Build
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REPONAME: ${{ github.event.repository.name }}
+  WORKSPACE: ${{ github.workspace }}
+  client_id: ${{secrets.CLIENT_ID}}
+  client_secret: ${{secrets.CLIENT_SECRET}}
+  tenant_id: ${{secrets.TENANT_ID}}
+  subscription_id: ${{secrets.SUBSCRIPTION_ID}}
+  sas_token: ${{secrets.SAS_TOKEN}}
+  administratorloginpassword: ${{secrets.ADMINISTRATORLOGINPASSWORD}}
+
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+          
+      - name: Print terraform version
+        run: terraform version
+      
+      - name: Export Azure Login Credentials
+        run: |
+          echo "ARM_CLIENT_ID=${{ secrets.CLIENT_ID }}" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}" >> $GITHUB_ENV
+          echo "ARM_SUBSCRIPTION_ID=${{ secrets.SUBSCRIPTION_ID }}" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=${{ secrets.TENANT_ID }}" >> $GITHUB_ENV
+          echo "ARM_SAS_TOKEN=${{ secrets.SAS_TOKEN }}" >> $GITHUB_ENV
+          
+      - name: Initalize Terraform
+        run: terraform init
+
+      - name: terraform plan
+        run: terraform plan -var="administratorloginpassword=${{secrets.administratorloginpassword}}" -var="client_id=${{secrets.client_id}}" -var="client_secret=${{secrets.client_secret}}" -var="tenant_id=${{secrets.tenant_id}}" -var="subscription_id=${{secrets.subscription_id}}" -out=tfplan
+
+      - name: terraform apply
+        run: terraform apply -auto-approve "tfplan"
