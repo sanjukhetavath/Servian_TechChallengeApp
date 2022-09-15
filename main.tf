@@ -91,8 +91,4 @@ resource "azurerm_app_service" "app" {
       }
     }
   }
-
-  depends_on = [
-    azurerm_postgresql_firewall_rule.rule
-  ]
 }
